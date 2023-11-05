@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import pyodbc
 
 # Datos de conexión a SQL Server
@@ -23,9 +22,6 @@ id_columns = ['ID_TOMADOR', 'ID_TOMADOR_1', 'ID_PRODUCTOR', 'ID_REFERIDOR']  # L
 for column in id_columns:
     dataframe[column] = dataframe[column].apply(lambda x: '{:.0f}'.format(x))
 
-# Convertir los valores NaN a None
-dataframe = dataframe.fillna(value=np.nan)
-
 # Establecer la conexión a SQL Server
 conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={server};DATABASE={database};UID={username};Trusted_Connection=yes")
 
@@ -33,12 +29,31 @@ conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={server};DATABASE={database
 cursor = conn.cursor()
 
 # Nombre de la tabla en SQL Server
-table_name = 'num_recibo_2'
+table_name = 'num_recibos_temp'
 
-# Borrar los datos existentes en la tabla
-cursor.execute(f"TRUNCATE TABLE {table_name}")
+# Verificar si la tabla existe
+if cursor.tables(table=table_name).fetchone():
+    # Borrar los datos existentes en la tabla
+    cursor.execute(f"TRUNCATE TABLE {table_name}")
+    conn.commit()
+else:
+    # La tabla no existe, crearla
+    # Crear la tabla en SQL Server
+    query_create_table = f"CREATE TABLE {table_name} ("
 
-# Insertar los nuevos datos en la tabla
+    # Recorrer las columnas del DataFrame para obtener el nombre y tipo de dato
+    for column in dataframe.columns:
+        column_name = column.replace(' ', '_')  # Reemplazar espacios en blanco por guiones bajos
+        column_type = 'VARCHAR(MAX) NULL'  # Permitir NULL en las columnas
+        query_create_table += f"{column_name} {column_type},"
+
+    query_create_table = query_create_table[:-1]  # Eliminar la última coma
+    query_create_table += ")"
+
+    cursor.execute(query_create_table)
+    conn.commit()
+
+# Insertar los datos en la tabla
 query_insert_data = f"INSERT INTO {table_name} ("
 
 # Recorrer las columnas del DataFrame para obtener los nombres de las columnas
@@ -57,7 +72,7 @@ query_insert_data += ")"
 # Insertar los datos fila por fila
 for row in dataframe.itertuples(index=False):
     # Convertir los valores a tipos de datos apropiados
-    row_values = [str(value) if value is not None else value for value in row]
+    row_values = [str(value) if pd.isnull(value) else value for value in row]
 
     cursor.execute(query_insert_data, tuple(row_values))
 
@@ -66,4 +81,4 @@ conn.commit()
 # Cerrar la conexión a SQL Server
 conn.close()
 
-print("Datos borrados y nuevos datos insertados exitosamente en la tabla existente.")
+print("Tabla creada y datos insertados exitosamente.")
