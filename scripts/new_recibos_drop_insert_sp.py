@@ -17,12 +17,15 @@ csv_file = 'C:\\Users\\diego\\OneDrive\\Documents\\Python\\data.csv'
 # Leer el archivo CSV utilizando pandas
 dataframe = pd.read_csv(csv_file)
 
-# Renombrar la columna "ID_TOMADOR.1" a "ID_TOMADOR_1"
-dataframe = dataframe.rename(columns={"ID_TOMADOR.1": "ID_TOMADOR_1"})
+dataframe = dataframe.rename(columns={"CD_RAMO_POL": "CD_RAMO", "CD_SUCURSAL_POL": "CD_SUCURSAL"})
 
 # Formato de visualización para las columnas de ID
-id_columns = ['ID_TOMADOR', 'ID_TOMADOR_1', 'ID_PRODUCTOR', 'ID_REFERIDOR']  # Lista de columnas que contienen los ID
+id_columns = []  # Lista de columnas que contienen los ID
 
+# Eliminar las columnas especificadas
+columnas_eliminar = ['CD_ST_RECIBO', 'Mes', 'POLIZAID_CERTIFID', 'Source.Name', 'TABLA', 'TP_POLIZA', 'SUSCRITO USD']
+dataframe = dataframe.drop(columnas_eliminar, axis=1)
+    
 # Aplicar el formato de visualización a las columnas de ID
 for column in id_columns:
     dataframe[column] = dataframe[column].apply(lambda x: '{:.0f}'.format(x))
@@ -37,7 +40,7 @@ conn = pyodbc.connect("DRIVER={SQL Server};SERVER=DIEGO\\SQLEXPRESS;DATABASE=tes
 cursor = conn.cursor()
 
 # Nombre de la tabla en SQL Server
-table_name = 'num_recibo_2'
+table_name = 'TB_MARCA_RECIBO'
 
 # Borrar los datos existentes en la tabla
 cursor.execute(f"TRUNCATE TABLE {table_name}")
@@ -62,12 +65,25 @@ query_insert_data += ")"
 for row in dataframe.itertuples(index=False):
     # Convertir los valores a tipos de datos apropiados
     row_values = [str(value) if value is not None else value for value in row]
-
     cursor.execute(query_insert_data, tuple(row_values))
 
 conn.commit()
 
+cursor.execute("EXEC EjemploPrint2")
+
+conn.commit()
+
+print("Datos borrados y nuevos datos insertados exitosamente en la tabla existente.")
+
+# Tiempo final de ejecucion 
+fin  = time.time()
+
+# Calcula la duración de la ejecución en segundos
+duracion = fin - inicio
+
+# Imprime la duración en segundos
+print("Tiempo de ejecución:", duracion, "segundos")
+
 # Cerrar la conexión a SQL Server
 conn.close()
 
-print("Datos borrados y nuevos datos insertados exitosamente en la tabla existente.")

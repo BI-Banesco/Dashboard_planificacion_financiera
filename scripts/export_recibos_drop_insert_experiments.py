@@ -6,11 +6,6 @@ import time
 # Tiempo inicial de ejecucion 
 inicio = time.time()
 
-# Datos de conexión a SQL Server
-server = 'DIEGO\\SQLEXPRESS'
-database = 'testExportBI'
-username = 'DIEGO\\diego'
-
 # Ruta del archivo CSV
 csv_file = 'C:\\Users\\diego\\OneDrive\\Documents\\Python\\data.csv'
 
@@ -31,9 +26,8 @@ for column in id_columns:
 dataframe = dataframe.fillna(value=np.nan)
 
 # Establecer la conexión a SQL Server
-conn = pyodbc.connect("DRIVER={SQL Server};SERVER=DIEGO\\SQLEXPRESS;DATABASE=testExportBI;UID=DIEGO\\diego;Trusted_Connection=yes")
+conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={'DIEGO\\SQLEXPRESS'};DATABASE={'testExportBI'};UID={'DIEGO\\diego'};Trusted_Connection=yes")
 
-# Crear un cursor para ejecutar comandos SQL
 cursor = conn.cursor()
 
 # Nombre de la tabla en SQL Server
@@ -71,3 +65,12 @@ conn.commit()
 conn.close()
 
 print("Datos borrados y nuevos datos insertados exitosamente en la tabla existente.")
+
+# Tiempo final de ejecucion 
+fin  = time.time()
+
+# Calcula la duración de la ejecución en segundos
+duracion = fin - inicio
+
+# Imprime la duración en segundos
+print("Tiempo de ejecución:", duracion, "segundos")
