@@ -17,21 +17,17 @@ csv_file = 'C:\\Users\\diego\\OneDrive\\Documents\\Python\\data.csv'
 # Leer el archivo CSV utilizando pandas
 dataframe = pd.read_csv(csv_file)
 
-dataframe = dataframe.rename(columns={"CD_RAMO_POL": "CD_RAMO", "CD_SUCURSAL_POL": "CD_SUCURSAL"})
-
-# Formato de visualización para las columnas de ID
-id_columns = []  # Lista de columnas que contienen los ID
+dataframe = dataframe.rename(columns={"CD_RAMO_POL": "CD_RAMO", "CD_SUCURSAL_POL": "CD_SUCURSAL", "NU_POLIZA": "NU_POLIZA"})
 
 # Eliminar las columnas especificadas
-columnas_eliminar = ['CD_ST_RECIBO', 'Mes', 'POLIZAID_CERTIFID', 'Source.Name', 'TABLA', 'TP_POLIZA', 'SUSCRITO USD']
+columnas_eliminar = ['CD_ST_RECIBO', 'MES', 'POLIZAID_CERTIFID', 'Source.Name', 'TABLA', 'TP_POLIZA', 'SUSCRITO USD']
 dataframe = dataframe.drop(columnas_eliminar, axis=1)
-    
-# Aplicar el formato de visualización a las columnas de ID
-for column in id_columns:
-    dataframe[column] = dataframe[column].apply(lambda x: '{:.0f}'.format(x))
 
 # Convertir los valores NaN a None
 dataframe = dataframe.fillna(value=np.nan)
+
+# Opcionalmente, especificar columnas para identificar duplicados
+dataframe = dataframe.drop_duplicates(subset=['CD_SUCURSAL', 'CD_RAMO', 'NU_POLIZA'])
 
 # Establecer la conexión a SQL Server
 conn = pyodbc.connect("DRIVER={SQL Server};SERVER=DIEGO\\SQLEXPRESS;DATABASE=testExportBI;UID=DIEGO\\diego;Trusted_Connection=yes")
@@ -69,7 +65,13 @@ for row in dataframe.itertuples(index=False):
 
 conn.commit()
 
-cursor.execute("EXEC EjemploPrint2")
+# Definir la declaración SQL con parámetros de marcador de posición
+cursor.execute("EXEC SP_ACTUALIZAR_PRIMAS '2023-9-1', '1'")
+
+conn.commit()
+
+# Definir la declaración SQL con parámetros de marcador de posición
+cursor.execute("EXEC SP_ACTUALIZAR_SUSCRITO '2023-9-1', '1'")
 
 conn.commit()
 

@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import time
+import numpy as np
 
 # Tiempo inicial de ejecución
 inicio = time.time()
@@ -26,17 +27,20 @@ dataframe = pd.read_sql_query(query, engine)
 dataframe = dataframe.fillna("")
 
 # Convertir cada columna del DataFrame a una cadena separada por '|'
+columnas = dataframe.columns
+texto_columnas = '|'.join(columnas)
 texto_filas = dataframe.apply(lambda row: '|'.join(row.astype(str)), axis=1)
 
 # Unir las filas en una sola cadena de texto
-texto = dataframe.columns.to_series().str.cat(['\n', texto_filas.str.cat(sep='\n')])
+texto = texto_columnas + '\n' + texto_filas.str.cat(sep='\n')
 
 # Ruta del archivo TXT de salida
-txt_file_output = 'C:/Users/diego/OneDrive/Documents/Python/test_export_5.txt'
+txt_file_output = 'C:/Users/diego/OneDrive/Documents/Python/test_export_6.txt'
 
 # Guardar el texto en un archivo de texto
 with open(txt_file_output, 'w', encoding='utf-8') as archivo:
     archivo.write(texto)
+
 
 # Contar el número de filas procesadas
 num_filas = len(dataframe)
@@ -47,8 +51,9 @@ fin = time.time()
 # Calcula la duración de la ejecución en segundos
 duracion = fin - inicio
 
-# Imprime el número de filas procesadas y la duración
-print(f'Archivo procesados: {txt_file_output}')
+# Imprime el número de filas procesadas
+print('Archivo procesados: test_export_5.txt')
+
 print('Duración de generación del txt:', duracion)
 
 # Imprimir mensaje de éxito
